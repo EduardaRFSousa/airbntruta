@@ -6,6 +6,7 @@ public class Servico {
     private String nome;
     private String tipo;
     private String descricao;
+    private int hospedeiroId;
 
     public int getCodigo() {
         return codigo;
@@ -37,5 +38,13 @@ public class Servico {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
-    } 
+    }  
+
+    public int getHospedeiroId() { 
+        return hospedeiroId; 
+    }
+
+    public void setHospedeiroId(int hospedeiroId) { 
+        this.hospedeiroId = hospedeiroId; 
+    }
 } 

@@ -6,8 +6,8 @@ import com.web.model.entities.Hospedeiro;
 import com.web.model.entities.Servico;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import java.sql.SQLException;
+ 
+import java.sql.SQLException; 
 import java.util.List;
 
 @Repository
@@ -50,6 +50,10 @@ public class Facade {
         return this.rServico.readAll();
     }
 
+    public List<Servico> readServicoByHospedeiro(int hospedeiroId) throws SQLException {
+        return this.rServico.readByHospedeiro(hospedeiroId);
+    }
+
     // ---------------- FUGITIVO ----------------
     public void create(Fugitivo f) throws SQLException {
         this.rFugitivo.create(f);
@@ -81,6 +85,10 @@ public class Facade {
         this.rHospedagem.create(h);
     }
 
+    public void deleteHospedagem(int codigo) throws SQLException {
+        this.rHospedagem.delete(codigo);
+    }
+
     public Hospedagem readHospedagem(int codigo) throws SQLException {
         return this.rHospedagem.read(codigo);
     }
@@ -91,5 +99,9 @@ public class Facade {
 
     public List<Hospedagem> filterHospedagemByHospedeiro(int codigoHospedeiro) throws SQLException {
         return this.rHospedagem.filterByHospedeiro(codigoHospedeiro);
+    }
+
+    public List<Hospedagem> filterHospedagemByCriterios(String local, Double preco) throws SQLException {
+        return this.rHospedagem.filterByCriterios(local, preco);
     }
 }

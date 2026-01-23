@@ -23,14 +23,14 @@ public class ServicoRepository implements GenericRepository<Servico, Integer> {
 
     @Override
     public void create(Servico s) throws SQLException {
-        String sql = "INSERT INTO servico(nome, tipo, descricao) VALUES (?, ?, ?)";
-
+        // Adicionado hospedeiro_id no INSERT
+        String sql = "INSERT INTO servico(nome, tipo, descricao, hospedeiro_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = connectionManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, s.getNome());
             stmt.setString(2, s.getTipo());
             stmt.setBytes(3, s.getDescricao().getBytes());
+            stmt.setInt(4, s.getHospedeiroId());
             stmt.execute();
         }
     }
@@ -122,6 +122,27 @@ public class ServicoRepository implements GenericRepository<Servico, Integer> {
                     s.setNome(rs.getString("nome"));
                     s.setTipo(rs.getString("tipo"));
                     s.setDescricao(new String(rs.getBytes("descricao")));
+                    lista.add(s);
+                }
+            }
+        }
+        return lista;
+    }
+
+    public List<Servico> readByHospedeiro(int hospedeiroId) throws SQLException {
+        String sql = "SELECT * FROM servico WHERE hospedeiro_id = ?";
+        List<Servico> lista = new ArrayList<>();
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, hospedeiroId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Servico s = new Servico();
+                    s.setCodigo(rs.getInt("codigo"));
+                    s.setNome(rs.getString("nome"));
+                    s.setTipo(rs.getString("tipo"));
+                    s.setDescricao(new String(rs.getBytes("descricao")));
+                    s.setHospedeiroId(rs.getInt("hospedeiro_id"));
                     lista.add(s);
                 }
             }

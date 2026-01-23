@@ -94,7 +94,12 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
 
     @Override
     public void delete(Integer k) throws SQLException {
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        String sql = "DELETE FROM hospedagem WHERE codigo = ?";
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, k);
+            stmt.executeUpdate();
+        }
     }
 
     @Override
@@ -128,6 +133,27 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
         return filterBy(sql);
     }
 
+    public List<Hospedagem> filterByCriterios(String local, Double preco) throws SQLException {
+        String sql = "SELECT * FROM hospedagem WHERE fugitivo_id IS NULL";
+        if (local != null && !local.isEmpty()) sql += " AND localizacao LIKE ?";
+        if (preco != null) sql += " AND diaria <= ?";
+
+        List<Hospedagem> lista = new ArrayList<>();
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            int pos = 1;
+            if (local != null && !local.isEmpty()) stmt.setString(pos++, "%" + local + "%");
+            if (preco != null) stmt.setDouble(pos++, preco);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapResultSetToHospedagem(rs)); // Use seu método de mapeamento
+                }
+            }
+        }
+        return lista;
+    }
 
     private Hospedagem mapResultSetToHospedagem(ResultSet rs) throws SQLException {
         Hospedagem h = new Hospedagem();

@@ -59,4 +59,18 @@ public class HospedagemController {
             return "redirect:/hospedeiro/home?erro";
         }
     }
+
+    /* ================= DELETE ================= */
+    @GetMapping("/delete")
+    public String delete(@RequestParam int id) {
+        if (session.getAttribute("hospedeiroLogado") == null) return "redirect:/";
+
+        try {
+            facade.deleteHospedagem(id);
+            return "redirect:/hospedeiro/home?sucessoDeleteHospedagem";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "redirect:/hospedeiro/home?erroDeleteHospedagem";
+        }
+    }
 }

@@ -1,7 +1,6 @@
 package com.web.controllers;
 
-import java.sql.SQLException;
-import java.util.List;
+import java.sql.SQLException; 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -9,10 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import com.web.model.entities.Hospedagem;
-import com.web.model.entities.Hospedeiro;
-import com.web.model.entities.Servico;
+ 
+import com.web.model.entities.Hospedeiro; 
 import com.web.model.repositories.Facade;
 
 import jakarta.servlet.http.HttpSession;
@@ -60,23 +57,13 @@ public class HospedeiroController {
     @GetMapping("/home")
     public String home(Model model) {
         Hospedeiro logado = (Hospedeiro) session.getAttribute("hospedeiroLogado");
-
-        if (logado == null) {
-            return "redirect:/";
-        }
+        if (logado == null) return "redirect:/";
 
         try {
-            // Busca as hospedagens do hospedeiro logado
-            List<Hospedagem> hospedagens = facade.filterHospedagemByHospedeiro(logado.getCodigo());
-            model.addAttribute("hospedagens", hospedagens);
-
-            // BUSCA TODOS OS SERVIÇOS DISPONÍVEIS (Adicione esta linha)
-            List<Servico> servicos = facade.readAllServico();
-            model.addAttribute("servicos", servicos);
-
+            model.addAttribute("hospedagens", facade.filterHospedagemByHospedeiro(logado.getCodigo())); 
+            model.addAttribute("servicos", facade.readServicoByHospedeiro(logado.getCodigo()));   
         } catch (SQLException e) {
-            e.printStackTrace();
-            model.addAttribute("msg", "Erro ao carregar dados do painel");
+            model.addAttribute("msg", "Erro ao carregar dados");
         }
         return "hospedeiro/home";
     }
