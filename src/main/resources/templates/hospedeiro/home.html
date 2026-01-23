@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Hospedeiro | AirBnTruta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; }
+        .nav-tabs .nav-link { color: #aaa; border: none; }
+        .nav-tabs .nav-link.active { background-color: #ff4757; color: white; border-radius: 5px 5px 0 0; }
+        .card-hospedeiro { background-color: #1e1e1e; border: 1px solid #333; margin-bottom: 15px; }
+        .modal-content { background-color: #1e1e1e; color: white; border: 1px solid #444; }
+
+        /* TITULO DO CARD: Forçando a cor branca e removendo qualquer transparência */
+        .card-hospedeiro h5 {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            opacity: 1 !important;
+        }
+
+        /* PLACEHOLDERS: Forçando uma cor cinza clara bem visível */
+        .form-control::placeholder {
+            color: #cccccc !important; 
+            opacity: 1 !important;
+        }
+        
+        /* Para navegadores mais antigos ou específicos */
+        .form-control::-webkit-input-placeholder { color: #cccccc !important; opacity: 1 !important; }
+        .form-control::-moz-placeholder { color: #cccccc !important; opacity: 1 !important; }
+        .form-control:-ms-input-placeholder { color: #cccccc !important; opacity: 1 !important; }
+
+        /* TEXTO DIGITADO: Garante que o que você escreve seja branco */
+        .form-control {
+            color: #ffffff !important;
+            background-color: #2b2b2b !important; /* Um tom levemente mais claro que o fundo para destacar o campo */
+            border: 1px solid #444 !important;
+        }
+
+        .card-hospedeiro:hover {
+            border-color: #ff4757;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand">AirBnTruta - Painel Hospedeiro</span>
+        <div class="d-flex align-items-center">
+            <span class="me-3 text-secondary" th:text="'Olá, ' + ${session.hospedeiroLogado.vulgo}"></span>
+            <a href="/hospedeiro/logout" class="btn btn-outline-light btn-sm">Sair</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <ul class="nav nav-tabs" id="tabHospedeiro" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="vagas-tab" data-bs-toggle="tab" data-bs-target="#vagas" type="button">Minhas Hospedagens</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="servicos-tab" data-bs-toggle="tab" data-bs-target="#servicos" type="button">Meus Serviços</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4" id="conteudoTabs">
+        <div class="tab-pane fade show active" id="vagas" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h4>Hospedagens Cadastradas</h4>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalHospedagem">Anunciar Novo Abrigo</button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4" th:each="h : ${hospedagens}">
+                    <div class="card card-hospedeiro p-3">
+                        <h5 th:text="${h.descricaoCurta}">Descrição</h5>
+                        <p class="text-secondary mb-1" th:text="${h.localizacao}">Local</p>
+                        <p class="text-danger fw-bold" th:text="'R$ ' + ${h.diaria}">Preço</p>
+                        <div th:if="${h.fugitivo != null}" class="badge bg-warning text-dark">Ocupada</div>
+                        <div th:unless="${h.fugitivo != null}" class="badge bg-success">Disponível</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="servicos" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h4>Serviços Disponíveis</h4>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalServico">Cadastrar Serviço</button>
+            </div>
+            
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${servicos}">
+                        <td th:text="${s.nome}"></td>
+                        <td th:text="${s.tipo}"></td>
+                        <td>
+                            <a th:href="@{/servico/delete/(id=${s.codigo})}" class="btn btn-sm btn-outline-danger">Remover</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalHospedagem" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/hospedagem/new}" method="post" class="modal-content p-3">
+            <div class="modal-header"><h5>Nova Hospedagem</h5></div>
+            <div class="modal-body">
+                <input type="text" name="descricaoCurta" class="form-control mb-2 bg-dark text-white" placeholder="Título do Anúncio" required>
+                <textarea name="descricaoLonga" class="form-control mb-2 bg-dark text-white" placeholder="Descrição detalhada"></textarea>
+                <input type="text" name="localizacao" class="form-control mb-2 bg-dark text-white" placeholder="Localização (Ex: Recife, Olinda)">
+                <input type="number" step="0.01" name="diaria" class="form-control mb-3 bg-dark text-white" placeholder="Valor da Diária" required>
+                
+                <label class="mb-2">Serviços Inclusos:</label>
+                <div class="row px-3">
+                    <div th:each="s : ${servicos}" class="form-check col-6">
+                        <input class="form-check-input" type="checkbox" name="servs" th:value="${s.codigo}" th:id="'serv'+${s.codigo}">
+                        <label class="form-check-label" th:for="'serv'+${s.codigo}" th:text="${s.nome}"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-danger w-100">Publicar Abrigo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalServico" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/servico/save}" method="post" class="modal-content p-3">
+            <div class="modal-header"><h5>Novo Serviço</h5></div>
+            <div class="modal-body">
+                <input type="text" name="nome" class="form-control mb-2 bg-dark text-white" placeholder="Nome do Serviço" required>
+                <input type="text" name="tipo" class="form-control mb-2 bg-dark text-white" placeholder="Tipo (Segurança, Alimentação...)">
+                <textarea name="descricao" class="form-control mb-3 bg-dark text-white" placeholder="Descrição"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-warning w-100">Salvar Serviço</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
