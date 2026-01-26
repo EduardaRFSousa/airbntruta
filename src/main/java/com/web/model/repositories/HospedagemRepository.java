@@ -20,17 +20,20 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
     private final ConnectionManager connectionManager;
     private final HospedeiroRepository hospedeiroRepository;
     private final FugitivoRepository fugitivoRepository;
-    private final ServicoRepository servicoRepository;
+    private final ServicoRepository servicoRepository;  
+    private final InteresseRepository interesseRepository; 
 
     @Autowired
     public HospedagemRepository(ConnectionManager connectionManager,
                                 HospedeiroRepository hospedeiroRepository,
                                 FugitivoRepository fugitivoRepository,
-                                ServicoRepository servicoRepository) {
+                                ServicoRepository servicoRepository,
+                                InteresseRepository interesseRepository) {
         this.connectionManager = connectionManager;
         this.hospedeiroRepository = hospedeiroRepository;
         this.fugitivoRepository = fugitivoRepository;
-        this.servicoRepository = servicoRepository;
+        this.servicoRepository = servicoRepository;  
+        this.interesseRepository = interesseRepository;
     }
 
     @Override
@@ -123,18 +126,13 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
         return hospedagens;
     }
 
-    public List<Hospedagem> filterByAvailable() throws SQLException {
-        String sql = "SELECT * FROM hospedagem WHERE fugitivo_id IS NULL";
-        return filterBy(sql);
-    }
-
     public List<Hospedagem> filterByHospedeiro(int codigoHospedeiro) throws SQLException {
         String sql = "SELECT * FROM hospedagem WHERE hospedeiro_id = " + codigoHospedeiro;
         return filterBy(sql);
     }
 
     public List<Hospedagem> filterByCriterios(String local, Double preco) throws SQLException {
-        String sql = "SELECT * FROM hospedagem WHERE fugitivo_id IS NULL";
+        String sql = "SELECT * FROM hospedagem WHERE disponivel = true"; // Alterado aqui
         if (local != null && !local.isEmpty()) sql += " AND localizacao LIKE ?";
         if (preco != null) sql += " AND diaria <= ?";
 
@@ -155,21 +153,100 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
         return lista;
     }
 
+    public List<Hospedagem> filterByAvailable(int fugitivoLogadoId) throws SQLException {
+        String sql = "SELECT * FROM hospedagem h WHERE h.disponivel = true " +
+                    "AND h.codigo NOT IN (SELECT i.hospedagem_id FROM interesse i WHERE i.fugitivo_id = ?)";
+        
+        List<Hospedagem> lista = new ArrayList<>();
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, fugitivoLogadoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapResultSetToHospedagem(rs));
+                }
+            }
+        }
+        return lista;
+    }
+
+    public void registrarInteresse(int hospedagemId, int fugitivoId) throws SQLException {
+        String sql = "UPDATE hospedagem SET fugitivo_id = ? WHERE codigo = ?";
+
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, fugitivoId);
+            stmt.setInt(2, hospedagemId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public List<Hospedagem> filterByFugitivo(int fugitivoId) throws SQLException {
+        String sql = "SELECT h.* FROM hospedagem h " +
+                    "JOIN interesse i ON h.codigo = i.hospedagem_id " +
+                    "WHERE i.fugitivo_id = ?";
+        List<Hospedagem> lista = new ArrayList<>();
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, fugitivoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapResultSetToHospedagem(rs));
+                }
+            }
+        }
+        return lista;
+    }
+
+    /* ================= REMOVER INTERESSE ================= */
+    public void removerInteresse(int hospedagemId, int fugitivoId) throws SQLException {
+        String sqlInteresse = "DELETE FROM interesse WHERE hospedagem_id = ? AND fugitivo_id = ?";
+        String sqlHospedagem = "UPDATE hospedagem SET fugitivo_id = NULL, disponivel = true WHERE codigo = ? AND fugitivo_id = ?";
+        
+        try (Connection conn = connectionManager.getConnection()) {
+            conn.setAutoCommit(false); // Inicia transação
+            try (PreparedStatement st1 = conn.prepareStatement(sqlInteresse);
+                PreparedStatement st2 = conn.prepareStatement(sqlHospedagem)) {
+                
+                st1.setInt(1, hospedagemId);
+                st1.setInt(2, fugitivoId);
+                st1.executeUpdate();
+                
+                st2.setInt(1, hospedagemId);
+                st2.setInt(2, fugitivoId);
+                st2.executeUpdate();
+                
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
     private Hospedagem mapResultSetToHospedagem(ResultSet rs) throws SQLException {
         Hospedagem h = new Hospedagem();
         h.setCodigo(rs.getInt("codigo"));
         h.setDescricaoCurta(rs.getString("descricao_curta"));
-        h.setDescricaoLonga(rs.getString("descricao_longa"));
-        h.setLocalizacao(rs.getString("localizacao"));
         h.setDiaria(rs.getDouble("diaria"));
-        h.setInicio(rs.getDate("inicio"));
-        h.setFim(rs.getDate("fim"));
+        h.setLocalizacao(rs.getString("localizacao"));
+        h.setDisponivel(rs.getBoolean("disponivel"));
 
-        // Carregar relacionamentos via repositórios injetados
-        h.setHospedeiro(hospedeiroRepository.read(rs.getInt("hospedeiro_id")));
-        h.setFugitivo(fugitivoRepository.read(rs.getInt("fugitivo_id")));
-        h.setServicos(servicoRepository.filterByHospedagem(h.getCodigo()));
+        h.setInteressados(this.interesseRepository.findFugitivosByHospedagem(h.getCodigo()));
+        h.setHospedeiro(this.hospedeiroRepository.read(rs.getInt("hospedeiro_id")));
 
         return h;
+    }
+
+    /* ================= CONFIRMAR HOSPEDAGEM ================= */
+    public void confirmarHospedagem(int hospedagemId, int fugitivoId) throws SQLException {
+        String sql = "UPDATE hospedagem SET fugitivo_id = ?, disponivel = false WHERE codigo = ?";
+        try (Connection conn = connectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, fugitivoId);
+            stmt.setInt(2, hospedagemId);
+            stmt.executeUpdate();
+        }
     }
 }

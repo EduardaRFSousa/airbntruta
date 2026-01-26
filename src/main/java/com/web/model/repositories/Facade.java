@@ -3,6 +3,7 @@ package com.web.model.repositories;
 import com.web.model.entities.Fugitivo;
 import com.web.model.entities.Hospedagem;
 import com.web.model.entities.Hospedeiro;
+import com.web.model.entities.Interesse;
 import com.web.model.entities.Servico;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -17,16 +18,19 @@ public class Facade {
     private final FugitivoRepository rFugitivo;
     private final HospedeiroRepository rHospedeiro;
     private final HospedagemRepository rHospedagem;
+    private final InteresseRepository rInteresse;
 
     @Autowired
     public Facade(ServicoRepository rServico,
                   FugitivoRepository rFugitivo,
                   HospedeiroRepository rHospedeiro,
-                  HospedagemRepository rHospedagem) {
+                  HospedagemRepository rHospedagem,
+                  InteresseRepository rInteresse) {
         this.rServico = rServico;
         this.rFugitivo = rFugitivo;
         this.rHospedeiro = rHospedeiro;
         this.rHospedagem = rHospedagem;
+        this.rInteresse = rInteresse;
     }
 
     // ---------------- SERVICO ----------------
@@ -93,8 +97,8 @@ public class Facade {
         return this.rHospedagem.read(codigo);
     }
 
-    public List<Hospedagem> filterHospedagemByAvailable() throws SQLException {
-        return this.rHospedagem.filterByAvailable();
+    public List<Hospedagem> filterHospedagemByAvailable(int fugitivoLogadoId) throws SQLException {
+        return this.rHospedagem.filterByAvailable(fugitivoLogadoId);
     }
 
     public List<Hospedagem> filterHospedagemByHospedeiro(int codigoHospedeiro) throws SQLException {
@@ -103,5 +107,25 @@ public class Facade {
 
     public List<Hospedagem> filterHospedagemByCriterios(String local, Double preco) throws SQLException {
         return this.rHospedagem.filterByCriterios(local, preco);
+    }
+
+    public void registrarInteresse(int hospedagemId, int fugitivoId) throws SQLException {
+        this.rHospedagem.registrarInteresse(hospedagemId, fugitivoId);
+    }
+
+    public List<Hospedagem> filterHospedagemByFugitivo(int fugitivoId) throws SQLException {
+        return this.rHospedagem.filterByFugitivo(fugitivoId);
+    }
+
+    public void removerInteresse(int hospedagemId, int fugitivoId) throws SQLException {
+        this.rHospedagem.removerInteresse(hospedagemId, fugitivoId);
+    }
+
+    public void confirmarHospedagem(int hospedagemId, int fugitivoId) throws SQLException {
+        this.rHospedagem.confirmarHospedagem(hospedagemId, fugitivoId);
+    }
+
+    public void createInteresse(Interesse i) throws SQLException {
+        this.rInteresse.create(i);
     }
 }

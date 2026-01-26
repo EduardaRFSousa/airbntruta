@@ -101,7 +101,7 @@
                     </select>
                 </div>
 
-                <form id="formFugitivo" th:action="@{/fugitivo/register}" method="post">
+                <form id="formFugitivo" th:action="@{/fugitivo/registrar}" method="post">
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="nome" placeholder="Nome completo" required></div>
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="vulgo" placeholder="Seu Vulgo" required></div>
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="especialidade" placeholder="Especialidade (Ex: Hacker)"></div>
@@ -111,7 +111,7 @@
                     <button type="submit" class="btn btn-danger w-100">Registrar como Fugitivo</button>
                 </form>
 
-                <form id="formHospedeiro" th:action="@{/hospedeiro/register}" method="post" style="display:none">
+                <form id="formHospedeiro" th:action="@{/hospedeiro/save}" method="post" style="display:none">
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="nome" placeholder="Nome completo" required></div>
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="vulgo" placeholder="Seu Vulgo" required></div>
                     <div class="mb-2"><input class="form-control bg-dark text-white border-secondary" name="contato" placeholder="Contato seguro"></div>

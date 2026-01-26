@@ -15,11 +15,13 @@ public class Hospedagem {
     private double diaria;
     private Date inicio;
     private Date fim;
-    
+    private boolean disponivel = true;
+
     private Hospedeiro hospedeiro;
     private Fugitivo fugitivo;
     private List<Servico> servicos;
-    
+    private List<Fugitivo> interessados = new ArrayList<>();
+
     public Hospedagem(){
         this.inicio = new Date();
         this.servicos = new ArrayList<>();
@@ -118,7 +120,6 @@ public class Hospedagem {
     }
     
     public void setInicio(String data){
-        
         try {
             this.inicio = new SimpleDateFormat("dd/MM/yyyy").parse(data);
         } catch (ParseException ex) {
@@ -133,5 +134,21 @@ public class Hospedagem {
         } catch (ParseException ex) {
             System.getLogger(Hospedagem.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
+    }
+
+    public boolean isDisponivel() { 
+        return disponivel; 
+    }
+
+    public void setDisponivel(boolean disponivel) { 
+        this.disponivel = disponivel; 
+    }
+
+    public List<Fugitivo> getInteressados() { 
+        return interessados; 
+    }
+
+    public void setInteressados(List<Fugitivo> interessados) { 
+        this.interessados = interessados; 
     }
 }
