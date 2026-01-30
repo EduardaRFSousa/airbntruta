@@ -232,7 +232,7 @@ public class HospedagemRepository implements GenericRepository<Hospedagem, Integ
         h.setDiaria(rs.getDouble("diaria"));
         h.setLocalizacao(rs.getString("localizacao"));
         h.setDisponivel(rs.getBoolean("disponivel"));
-
+        h.setServicos(this.servicoRepository.filterByHospedagem(h.getCodigo()));
         h.setInteressados(this.interesseRepository.findFugitivosByHospedagem(h.getCodigo()));
         h.setHospedeiro(this.hospedeiroRepository.read(rs.getInt("hospedeiro_id")));
 

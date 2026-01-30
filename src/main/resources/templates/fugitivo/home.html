@@ -87,6 +87,7 @@
                                     <p><strong>Serviços Inclusos:</strong></p>
                                     <ul>
                                         <li th:each="s : ${h.servicos}" th:text="${s.nome}"></li>
+                                        <li th:if="${#lists.isEmpty(h.servicos)}" class="text-secondary small">Nenhum serviço extra listado.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -104,9 +105,14 @@
                         <h5 th:text="${i.descricaoCurta}">Título</h5>
                         
                         <div th:if="${i.fugitivo == null || i.fugitivo.codigo != session.fugitivoLogado.codigo}" 
-                             class="badge bg-warning text-dark mb-2">Aguardando Aceite</div>
+                            class="badge bg-warning text-dark mb-2 w-100 py-2">
+                            <i class="bi bi-clock-history"></i> Aguardando Aceite
+                        </div>
+
                         <div th:if="${i.fugitivo != null && i.fugitivo.codigo == session.fugitivoLogado.codigo}" 
-                             class="badge bg-success mb-2">Reserva Confirmada!</div>
+                            class="badge bg-success mb-2 w-100 py-2">
+                            <i class="bi bi-check-circle-fill"></i> Reserva Confirmada!
+                        </div>
                         
                         <p class="text-secondary small mb-2" th:text="${i.localizacao}">Local</p>
                         
